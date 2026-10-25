@@ -50,7 +50,7 @@ class InstallDocker
                 "echo 'Installing Docker Engine...'",
                 "echo 'Configuring Docker Engine (merging existing configuration with the required)...'",
                 'sleep 4',
-                "echo 'Restarting Docker Engine...'",
+                "echo 'Restarting Docker Engine...",
                 'ls -l /tmp',
             ]);
 
@@ -83,16 +83,18 @@ class InstallDocker
                 'mv /etc/docker/daemon.json.coolify.pretty /etc/docker/daemon.json.coolify',
                 "jq -s '.[0] * .[1]' /etc/docker/daemon.json.coolify /etc/docker/daemon.json | tee /etc/docker/daemon.json.appended > /dev/null",
                 'mv /etc/docker/daemon.json.appended /etc/docker/daemon.json',
-                "echo 'Restarting Docker Engine...'",
+                "echo 'Restarting Docker Engine...",
             ]);
             $command = $command->merge($this->getDockerServiceCommands($supported_os_type->contains('alpine')));
             if ($server->isSwarm()) {
                 $command = $command->merge([
-                    'docker network create --attachable --driver overlay coolify-overlay >/dev/null 2>&1 || true',
+                    // Enable IPv6 on the overlay network for proper client IP forwarding
+                    'docker network create --attachable --driver overlay --ipv6 coolify-overlay >/dev/null 2>&1 || true',
                 ]);
             } else {
                 $command = $command->merge([
-                    'docker network create --attachable coolify >/dev/null 2>&1 || true',
+                    // Enable IPv6 on the bridge network used by the proxy
+                    'docker network create --attachable --ipv6 coolify >/dev/null 2>&1 || true',
                 ]);
                 $command = $command->merge([
                     "echo 'Done!'",
